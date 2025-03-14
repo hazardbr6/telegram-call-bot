@@ -1,12 +1,11 @@
 import os
-import requests
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from spoof import spoof_number
 from vpn import change_ip
 from call_handler import make_call
 
-# Telegram Bot Token (Replace with your actual token)
+# Telegram Bot Token
 BOT_TOKEN = "7871650691:AAHArQ17NVAZcNwDF0ZAthi7_yrsrd1mRyY"
 GROUP_ID = "-4641030948"
 
@@ -21,7 +20,7 @@ def start(message):
 # Ask for country code spoofing
 def ask_spoof_code(message):
     global target_number
-    target_number = message.text
+    target_number = message.text.strip()
 
     markup = InlineKeyboardMarkup()
     codes = {"+92": "🇵🇰 Pakistan", "+1": "🇺🇸 USA", "+7": "🇷🇺 Russia", "+972": "🇮🇱 Israel"}
@@ -33,7 +32,7 @@ def ask_spoof_code(message):
 # Handle country code selection
 @bot.callback_query_handler(func=lambda call: call.data.startswith("+"))
 def spoof_selected(call):
-    spoofed_number = spoof_number(call.data)
+    spoofed_number = spoof_number(call.data, target_number)
     bot.send_message(call.message.chat.id, f"✅ Spoofed Caller ID: {spoofed_number}")
     
     markup = InlineKeyboardMarkup()
@@ -48,7 +47,7 @@ def process_call(call):
     change_ip()
 
     success, message = make_call(target_number)
-    
+
     if success:
         bot.send_message(call.message.chat.id, "📡 Connecting to voice chat...")
         # Logic for streaming audio (to be implemented)
