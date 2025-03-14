@@ -1,15 +1,21 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.chrome.options import Options
+import chromedriver_autoinstaller
 
-# Initialize WebDriver with Firefox (Headless Mode)
-options = webdriver.FirefoxOptions()
+# Automatically install/update ChromeDriver
+chromedriver_autoinstaller.install()
+
+# Setup Chromium options for headless mode and optimized performance
+options = Options()
 options.add_argument("--headless")
-service = Service(GeckoDriverManager().install())
-driver = webdriver.Firefox(service=service, options=options)
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 
-# Free calling websites
+# Initialize the WebDriver (Chromium)
+driver = webdriver.Chrome(options=options)
+
+# List of free calling websites
 CALLING_SITES = [
     "https://globfone.com/call-phone/",
     "https://www.poptox.com/",
@@ -20,10 +26,9 @@ CALLING_SITES = [
 
 def make_call(phone_number):
     for site in CALLING_SITES:
-        driver.get(site)
-        time.sleep(5)
-
         try:
+            driver.get(site)
+            time.sleep(5)  # Wait for the page to load
             if "globfone" in site:
                 driver.find_element("name", "phoneNumber").send_keys(phone_number)
                 driver.find_element("id", "callButton").click()
@@ -39,11 +44,10 @@ def make_call(phone_number):
             elif "dingtone" in site:
                 driver.find_element("id", "phoneInput").send_keys(phone_number)
                 driver.find_element("id", "startCall").click()
-
-            time.sleep(10)
-            return True, f"✅ Call in progress to {phone_number} using {site}"
-        except:
-            continue  # Try next website if one fails
-
-    return False, "❌ Call failed using all available services."
+            time.sleep(10)  # Allow time for call initiation
+            return True, site
+        except Exception as e:
+            # Optionally log error: print(f"Error on {site}: {e}")
+            continue  # Try the next website if one fails
+    return False, "all available services"
 
